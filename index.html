@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+<html>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<body>
+<div></div>
+<div>сопротивление контура R
+    <input id='R' type="number" min="0" max="100000" value="2" /> Ом
+</div>
+<div>величина вектора магнитной индукции B
+    <input id='B' type="number" min="0" max="100000" value="1" /> Тл
+</div>
+<div>частота вращения f
+    <input id='f' type="number" min="0" max="100000" value="1" /> Гц
+</div>
+<div>площадь контура S
+    <input id='S' type="number" min="0" max="100000" value="1" /> м^2
+</div>
+<button id='draw1' onclick='draw()'>Построить график</button>
+<div id="myPlot" style="height:100%;"></div>
+
+<script>
+    // вычисляет эдс e(t)
+    function e(B, S, f, t)
+    {
+        let e = B * S * 2 * Math.PI * f * Math.sin(2 * Math.PI * f * t); // e = B * S * 2 * pi * f * Sin(2 * pi * f * t)
+        return e;
+    }
+
+    // возвращает список координат для построения графика
+    function getCoords(h, cnt, B, S, f, R)
+    {
+        let coords = [[], [], []]; // [[t1, ... t_cnt], [e(t1), ... e(t_cnt)], [I(t1), ... I(t_cnt)]
+        for (let i = 0; i < cnt; i++)
+        {
+            let t = h * i; // текущее t
+            let e_curr = e(B, S, f, t);
+            let I_curr = e_curr / R; 
+            coords[0].push(t);
+            coords[1].push(e_curr);
+            coords[2].push(I_curr);
+        }
+        return coords;
+    }
+
+    function draw() {
+        let cnt = 100000; //  number of iterations
+        let h = 0.0001; // step
+        const B = parseFloat(document.getElementById("B").value);
+        const f = parseFloat(document.getElementById("f").value);
+        const R = parseFloat(document.getElementById("R").value);
+        const S = parseFloat(document.getElementById("S").value);
+        let coords = getCoords(h, cnt, B, S, f, R);
+
+        // Define Data
+        const e_data = {
+            x: coords[0],
+            y: coords[1],
+            mode: "lines",
+            type: "scatter",
+            name: "e(t)"
+        };
+
+        const I_data = {
+            x: coords[0],
+            y: coords[2],
+            mode: "lines",
+            type: "scatter",
+            name: "I(t)",
+            xaxis: "x2",
+            yaxis: "y2",
+            //yaxis: "I(t), А"
+        };
+
+        // Define Layout
+        const layout = {
+            grid: {rows: 1, columns: 2, pattern: 'independent'},
+            title: "зависимость ЭДС и индукционного тока от времени",
+            xaxis: {
+                title: {
+                    text: "t, c"
+                },
+                exponentformat: 'e'
+            },
+            yaxis: {
+                title: {
+                    text: "e(t), В"
+                },
+                exponentformat: 'e'
+            },
+            xaxis2: {
+                title: {
+                    text: "t, c"
+                },
+                exponentformat: 'e'
+            },
+            yaxis2: {
+                title: {
+                    text: "I(t), A"
+                },
+                exponentformat: 'e'
+            }
+        };
+
+        // Display using Plotly
+        Plotly.newPlot("myPlot", [e_data, I_data], layout);
+    }
+
+    draw();
+    document.getElementById('draw1').onclick = draw; // draw by button click
+
+</script>
+
+</body>
+</html>
